@@ -2,24 +2,57 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import random as rd
+from scipy import stats
+import math
 
-def detect_pieces(im):
+def getKernel(ks):
+    r = math.floor(ks/2)
+    kernel = np.zeros((ks, ks), np.uint8)
+    kernel[r][r] = 1
+    for i in range(ks):
+        for j in range(ks):
+            if (i-r)**2 + (j-r)**2 <= r**2:
+                kernel[i][j] = 1
+
+def opening(img, kernel_size, itr):
+    # kernel = np.ones((kernel_size,kernel_size), np.uint8)
+    kernel = getKernel(kernel_size)
+    img = cv2.erode(img, kernel, iterations=itr)
+    img = cv2.dilate(img, kernel, iterations=itr)
+    return img
+
+def closing(img, kernel_size, itr):
+    kernel = getKernel(kernel_size)
+    img = cv2.dilate(img, kernel, iterations=itr)
+    img = cv2.erode(img, kernel, iterations=itr)
+    return img
+
+def remove_bg(im):
     im_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
-    med_h = np.median(im_hsv[:, :, 0])
-    med_s = np.median(im_hsv[:, :, 1])
-    med_v = np.median(im_hsv[:, :, 2])
+    med_h = stats.mode(im_hsv[:, :, 0], axis=None)[0][0]
+    med_s = stats.mode(im_hsv[:, :, 1], axis=None)[0][0]
+    med_v = stats.mode(im_hsv[:, :, 2], axis=None)[0][0]
 
-    lower_thres = np.array([med_h-5,med_s-80,med_v-80])
-    upper_thres = np.array([med_h+5,med_s+80,med_v+80])
+    lower_thres = np.array([med_h-5,med_s-60,med_v-80])
+    upper_thres = np.array([med_h+5,med_s+60,med_v+50])
 
     masked_img = cv2.inRange(im_hsv, lower_thres, upper_thres)
+
+    masked_img = closing(masked_img, 5, 3)
+    masked_img = closing(masked_img, 25, 3)
+    masked_img = opening(masked_img, 5, 2)
+    masked_img = cv2.dilate(masked_img, getKernel(15), iterations=2)
+    
     res_img = cv2.bitwise_and(im, im, mask = (255-masked_img))
+    # tmp = np.repeat(masked_img[:,:,np.newaxis], 3, axis = 2)
+    # remove_bg = cv2.bitwise_or(res_img, tmp)
 
-    kernel = np.ones((3,3), np.uint8)
-    masked_img = cv2.erode(masked_img, kernel, iterations=2)
-    masked_img = cv2.dilate(masked_img, kernel, iterations=2)
+    cv2.imwrite('images/test/backgroundRemoved.jpg', res_img)
+    return masked_img, res_img
 
+def detect_pieces(im):
+    masked_img, res_img = remove_bg(im)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     display = im

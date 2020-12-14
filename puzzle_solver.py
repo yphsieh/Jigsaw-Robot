@@ -1,23 +1,14 @@
 import cv2
 import numpy as np
-from argparse import ArgumentParser
+import argparse
 
-from detect_pieces import detect_pieces
-
-parser = ArgumentParser()
-parser.add_argument("--input_img", "-i", required=True, help="input image path")
-args = parser.parse_args()
-
-class PuzzleSolver():
-    def __init__(self, img=None):
-        self.original_img = img
-        self.pieces = []
-    
-    def main(self):
-        self.pieces = detect_pieces(self.original_img)
-        print(len(self.pieces))
+from Puzzle import *
 
 if __name__=="__main__":
-    img = cv2.imread(args.input_img)
-    puzzle_solver = PuzzleSolver(img)
-    puzzle_solver.main()
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--input_img", "-i", help="input image path", default = "./images/test/2_original.jpg")
+	args = parser.parse_args()
+
+	img = cv2.imread(args.input_img)
+	puzzle_solver = PuzzleSolver(img)
+	# puzzle_solver.main()
