@@ -21,8 +21,9 @@ class Puzzle():
 	def __init__(self, piece):
 		self.img = piece
 		self.corners = self.detect_corners()
-		# self.orientaion = self.cal_orientation()
-		self.pos = [0,0] # current position --> target position
+		self.orientaion = 0 # self.cal_orientation()
+		self.pos = [0,0]	# current position
+		self.target = [0,0]	# target position
 
 	def detect_corners(self):
 		gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
@@ -46,6 +47,9 @@ class Puzzle():
 
 	def get_pos(self):
 		return self.pos
+
+	def get_target(self):
+		return self.target
 
 	def get_orientation(self):
 		return self.orientaion
