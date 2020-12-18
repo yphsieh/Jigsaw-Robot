@@ -6,4 +6,10 @@ final project from Robotics 2020 spring
 python puzzle_solver.py <image_path>
 ```
 
+## Test Remove Background
+```
+python testRemoveBG.py <image_path>
+```
+- the results will be save in the folder ```./results/test/```
+
 ## Reference

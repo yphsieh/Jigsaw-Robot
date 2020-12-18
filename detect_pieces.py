@@ -4,6 +4,8 @@ import cv2
 import random as rd
 from scipy import stats
 import math
+import os
+import sys
 
 def getKernel(ks):
     r = math.floor(ks/2)
@@ -27,15 +29,20 @@ def closing(img, kernel_size, itr):
     img = cv2.erode(img, kernel, iterations=itr)
     return img
 
-def remove_bg(im):
+def image_preprocess(img):
+    w, h = img[:, :, 0].shape
+    img = img[int(0.15*w): int(0.9*w), int(0.15*h): int(0.85*h)]
+    return img
+
+def remove_bg(im, thres=[10, 70, 50]):
     im_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
     med_h = stats.mode(im_hsv[:, :, 0], axis=None)[0][0]
     med_s = stats.mode(im_hsv[:, :, 1], axis=None)[0][0]
     med_v = stats.mode(im_hsv[:, :, 2], axis=None)[0][0]
 
-    lower_thres = np.array([med_h-5,med_s-60,med_v-80])
-    upper_thres = np.array([med_h+5,med_s+60,med_v+50])
+    lower_thres = np.array([med_h-thres[0],med_s-thres[1],med_v-thres[2]])
+    upper_thres = np.array([med_h+thres[0],med_s+thres[1],med_v+thres[2]])
 
     masked_img = cv2.inRange(im_hsv, lower_thres, upper_thres)
 
@@ -51,8 +58,14 @@ def remove_bg(im):
     cv2.imwrite('images/test/backgroundRemoved.jpg', res_img)
     return masked_img, res_img
 
-def detect_pieces(im):
-    masked_img, res_img = remove_bg(im)
+def detect_pieces(im, name, thres):
+    if not os.path.isdir("./results/" + name):
+        print("creating folder './results/" + name + "'")
+        os.mkdir("./results/" + name)
+        os.mkdir("./results/" + name + "/cropped")
+    
+    masked_img, res_img = remove_bg(im, thres)
+    cv2.imwrite("./results/" + name + '/res.jpg', res_img)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     display = im
@@ -72,8 +85,8 @@ def detect_pieces(im):
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
             cropped = crop(res_img, rect, box)
             crop_pieces.append(cropped)
-            cv2.imwrite(f"./images/test/cropped/crop_{i:02d}.jpg", cropped)
-    cv2.imwrite("display.jpg", display)
+            cv2.imwrite("./results/" + name + f"/cropped/crop_{i:02d}.jpg", cropped)
+    cv2.imwrite("./results/" + name + "/display.jpg", display)
     return crop_pieces
 
 def crop(img, rect, box):
@@ -91,5 +104,8 @@ def crop(img, rect, box):
     return cropped
 
 if __name__=='__main__':
-    im = cv2.imread("images/puzzle_images/all/all_001.jpg")
-    detect_pieces(im)
+    im = cv2.imread(sys.argv[1])
+    im = image_preprocess(im)
+    cv2.imwrite('./results/test/crop.jpg', im)
+    detect_pieces(im, )
+    
