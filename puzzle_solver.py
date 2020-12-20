@@ -11,4 +11,4 @@ if __name__=="__main__":
 
 	img = cv2.imread(args.input_img)
 	puzzle_solver = PuzzleSolver(img)
-	# puzzle_solver.main()
+	puzzle_solver.solve()
