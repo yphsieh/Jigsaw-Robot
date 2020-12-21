@@ -18,13 +18,10 @@ class PuzzleSolver():
 		imgs = image_preprocess(self.camera_img)
 		pieces = detect_pieces(imgs, self.name)
 		# print(pieces)
-
-		pieces = detect_pieces(self.original_img, 'tmp')
 		puzzles = []
 		for p in pieces:
 			self.pieces.append(p)
 			# match = match_template(self.original_img, p)
-
 		# print(self.pieces[0].get_corners().shape)
 
 	def solve(self):
@@ -58,7 +55,7 @@ class Puzzle():
 		cv2.imwrite('images/tmp/corners.jpg', display)
 		return corners
 
-	def detect_corners2(self): 	# detect and return the corners as a list
+	def detect_corners(self): 	# detect and return the corners as a list
 		gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
 		# gray = np.float32(gray)
 		# dst = cv2.cornerHarris(gray,2,3,0.04)
