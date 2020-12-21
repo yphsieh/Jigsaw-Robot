@@ -34,7 +34,7 @@ def image_preprocess(img):
     img = img[int(0.15*w): int(0.9*w), int(0.15*h): int(0.85*h)]
     return img
 
-def remove_bg(im, thres=[10, 70, 50]):
+def remove_bg(im, thres):
     im_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
     med_h = stats.mode(im_hsv[:, :, 0], axis=None)[0][0]
@@ -58,7 +58,7 @@ def remove_bg(im, thres=[10, 70, 50]):
     cv2.imwrite('images/test/backgroundRemoved.jpg', res_img)
     return masked_img, res_img
 
-def detect_pieces(im, name, thres):
+def detect_pieces(im, name, thres=[10, 70, 50]):
     if not os.path.isdir("./results/" + name):
         print("creating folder './results/" + name + "'")
         os.mkdir("./results/" + name)
