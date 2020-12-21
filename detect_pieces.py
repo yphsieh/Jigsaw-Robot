@@ -37,9 +37,6 @@ def image_preprocess(img_path):
     return img
 
 def getRect(img):
-    M = cv2.moments(img)
-    cX = int(M['m10'] / M['m00'])
-    cY = int(M['m01'] / M['m00'])
 
     h, w = img.shape
 

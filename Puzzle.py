@@ -2,6 +2,7 @@ import cv2
 import sys
 import scipy
 import numpy as np
+import math
 
 from detect_pieces import *
 from utility import *
@@ -36,8 +37,7 @@ class PuzzleSolver():
 		methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
 		display = self.original.copy()
 
-		for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]: #range(len(self.pieces)):
-			# rotated = scipy.ndimage.rotate(self.pieces[i].img, self.pieces[i].orientation)
+		for i in range(len(self.pieces)):
 			gray = cv2.cvtColor(self.pieces[i].img, cv2.COLOR_BGR2GRAY)
 			gray = getRect(gray)
 
@@ -46,13 +46,14 @@ class PuzzleSolver():
 			phi_idx = -1
 			topleft_idx = -1
 
+			rot = gray.copy()
 			for phi in [0, 90, 180, 270]:
-				gray = scipy.ndimage.rotate(gray, phi)
+				rot = scipy.ndimage.rotate(gray, phi)
 
 				method = eval(methods[3])
 
 				# Apply template Matching
-				res = cv2.matchTemplate(self.original, gray, method)
+				res = cv2.matchTemplate(self.original, rot, method)
 				min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 				# If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
 				if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
@@ -65,17 +66,16 @@ class PuzzleSolver():
 					phi_idx = phi
 					topleft_idx = top_left
 
-			self.pieces[i].orientation = phi_idx + self.pieces[i].orientation
 			top_left = topleft_idx
 			bottom_right = (top_left[0] + w, top_left[1] + h)
+			cv2.rectangle(display, top_left, bottom_right, 255, 2)
+			cv2.circle(display, (int(top_left[0] + w/2), int(top_left[1] + h/2)), 3, 255, 2)
+			cv2.imwrite('images/tmp/matched.jpg', display)
 
 			print(phi_idx, max_val, top_left, bottom_right)
+			self.pieces[i].orientation = phi_idx + self.pieces[i].orientation
 
-			cv2.rectangle(display, top_left, bottom_right, 255, 2)
-
-			cv2.imwrite('images/tmp/matching.jpg', gray)
-			cv2.imwrite('images/tmp/matched.jpg', display)
-	
+			self.pieces[i].target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
 
 class Puzzle():
 	def __init__(self, piece):
