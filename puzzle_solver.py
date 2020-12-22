@@ -16,4 +16,4 @@ if __name__=="__main__":
 	name = args.input_img.split('/')[-1].split('.')[0]
 	puzzle_solver = PuzzleSolver(ori, img, name)
 	puzzle_solver.main()
-	# puzzle_solver.solve()
+	puzzle_solver.solve()

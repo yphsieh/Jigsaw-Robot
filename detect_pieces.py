@@ -2,10 +2,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import random as rd
+from numpy.lib.function_base import disp
 from scipy import stats
 import math
 import os
 import sys
+from scipy import stats
 
 def getKernel(ks):
     r = math.floor(ks/2)
@@ -72,9 +74,9 @@ def detect_pieces(im, name, thres=[10, 70, 50]):
     total_area = masked_img.shape[0] * masked_img.shape[1]
     candidate_box = []
     crop_pieces = []
-
-    for i, cnt in enumerate(contours):
-        # print(i)
+    mid_points = []
+    i = 0
+    for cnt in contours:
         area = cv2.contourArea(cnt)
         if area > total_area*0.002 and area < total_area*0.2:
             cv2.drawContours(display, [cnt], -1, (0,0,255), 5)
@@ -85,9 +87,82 @@ def detect_pieces(im, name, thres=[10, 70, 50]):
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
             cropped = crop(res_img, rect, box)
             crop_pieces.append(cropped)
+            mid = detect_middle(cnt.squeeze(), rect, display, name, i)
+            mid_points.append(mid)
+            cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
             cv2.imwrite("./results/" + name + f"/cropped/crop_{i:02d}.jpg", cropped)
+            i+=1
     cv2.imwrite("./results/" + name + "/display.jpg", display)
-    return crop_pieces
+    return crop_pieces, mid_points
+
+def detect_middle(cnt, box, img, name, i, vis=False):
+    assert(cnt.shape[1]==2)
+    mid = box[0]
+    size = box[1]
+    theta = (box[2])*math.pi/180
+    
+    num = cnt.shape[0]
+    cnt = cnt-mid
+    
+    r = np.array(( (np.cos(theta), -np.sin(theta)),
+                   (np.sin(theta),  np.cos(theta)) ))
+    
+    cnt = np.matmul(cnt, r).astype(np.int16)
+    # np.savetxt(f'cnt{int(mid[0])}.txt', cnt, fmt='%d')
+    
+    up = []
+    down = []
+    left = []
+    right= []
+    thres=[size[0]/4, size[1]/4]
+
+    count = 0
+    while not (up and down):
+        if count > 5:
+            return [0, 0]
+        for p in cnt:
+            if p[0]<-size[1]/2+thres[1]:
+                up.append(p)
+            elif p[0]>size[1]/2-thres[1]:
+                down.append(p)
+            if p[1]<-size[0]/2+thres[0]:
+                left.append(p)
+            elif p[1]>size[0]/2-thres[0]:
+                right.append(p)
+        thres += [20, 20]
+        count += 1
+    
+    if vis:
+        for p in up:
+            p = r.dot(p)
+            px = int(p[0] + mid[0])
+            py = int(p[1] + mid[1])
+            cv2.circle(img, (px, py), radius=5, color=(255, 0, 0), thickness=10)
+        for p in down:
+            p = r.dot(p)
+            px = int(p[0] + mid[0])
+            py = int(p[1] + mid[1])
+            cv2.circle(img, (px, py), radius=5, color=(125, 125, 0), thickness=10)
+        for p in left:
+            p = r.dot(p)
+            px = int(p[0] + mid[0])
+            py = int(p[1] + mid[1])
+            cv2.circle(img, (px, py), radius=5, color=(125, 0, 125), thickness=10)
+        for p in right:
+            p = r.dot(p)
+            px = int(p[0] + mid[0])
+            py = int(p[1] + mid[1])
+            cv2.circle(img, (px, py), radius=5, color=(0, 125, 125), thickness=10)
+        cv2.imwrite("./results/" + name + f"/test_mid.jpg", img)
+    
+    up_left = sorted(up, key=lambda x: x[0]+x[1])[0]
+    up_right = sorted(up, key=lambda x: x[0]-x[1])[0]
+    down_left = sorted(down, key=lambda x: -x[0]+x[1])[0]
+    down_right = sorted(down, key=lambda x: -x[0]-x[1])[0]
+    
+    mid_point = (up_left+up_right+down_left+down_right)//4
+    mid_point = r.dot(mid_point)
+    return mid_point+mid
 
 def crop(img, rect, box):
     width = int(rect[1][0])
@@ -102,6 +177,8 @@ def crop(img, rect, box):
     M = cv2.getPerspectiveTransform(src_pts, dst_pts)
     cropped = cv2.warpPerspective(img, M, (width, height))
     return cropped
+
+
 
 if __name__=='__main__':
     im = cv2.imread(sys.argv[1])

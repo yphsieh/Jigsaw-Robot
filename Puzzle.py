@@ -1,11 +1,12 @@
 import cv2
 import sys
+from matplotlib.pyplot import pie
 import scipy
 import numpy as np
 
 from detect_pieces import detect_pieces, image_preprocess
 from match_template import match_template
-from utility import *
+# from utility import *
 
 class PuzzleSolver():
 	def __init__(self, ori, img, name="test"):
@@ -15,27 +16,29 @@ class PuzzleSolver():
 		self.pieces = []
 
 	def main(self):
-		imgs = image_preprocess(self.camera_img)
-		pieces = detect_pieces(imgs, self.name)
-		# print(pieces)
-		puzzles = []
-		for p in pieces:
-			self.pieces.append(p)
-			# match = match_template(self.original_img, p)
-		# print(self.pieces[0].get_corners().shape)
+		# imgs = image_preprocess(self.camera_img)
+		imgs = self.camera_img
+		pieces, mid_points = detect_pieces(imgs, self.name)
+		for i in range(len(pieces)):
+			self.pieces.append(Puzzle(pieces[i], mid_points[i]))
 
 	def solve(self):
-		for i in range(len(self.pieces)):
-			rotated = scipy.ndimage.rotate(self.pieces[i].img, self.pieces[i].orientation)
+		pass
+		# for i, p in enumerate(self.pieces):
+		# 	edges = p.detect_edges()
+		# 	print('saving image ./results/'+self.name+f'/edges_{i:02}.jpg')
+		# 	cv2.imwrite('./results/'+self.name+f'/edges_{i:02}.jpg', edges)
+		# for i in range(len(self.pieces)):
+		# 	rotated = scipy.ndimage.rotate(self.pieces[i].img, self.pieces[i].orientation)
 			# for 0/90/180/270:
 			# 	cv2.matchTemplate(self.original_img, rotated, method)
 			# 	if found: self.orientation = 0/90/180/270 + self.orientation
 		
 
 class Puzzle():
-	def __init__(self, piece):
+	def __init__(self, piece, m):
 		self.img = piece
-		self.corners = self.detect_corners()
+		self.middle_point = m
 		self.orientation = 0 	# self.cal_orientation() yet to be done
 		self.pos = [0,0]		# current position (from image) 
 		self.target = [0,0]		# target position (row, column)
