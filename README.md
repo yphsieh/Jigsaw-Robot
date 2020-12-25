@@ -2,7 +2,9 @@
 final project from Robotics 2020 spring
 
 # Setup Env
-
+```
+pip install -r requirements.txt
+```
 
 ## Usage
 ```
