@@ -9,7 +9,7 @@ import os
 import sys
 from scipy import stats
 
-def getKernel(ks):g
+def getKernel(ks):
     r = math.floor(ks/2)
     kernel = np.zeros((ks, ks), np.uint8)
     kernel[r][r] = 1

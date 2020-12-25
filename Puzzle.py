@@ -5,6 +5,7 @@ from numpy.lib.function_base import average
 import scipy
 import numpy as np
 import math
+import json
 
 from detect_pieces import detect_pieces, image_preprocess, removeShadow
 
@@ -15,6 +16,8 @@ class PuzzleSolver():
         self.camera_img = img
         self.original = removeShadow(ori)
         self.pieces = []
+        self.w = 0
+        self.h = 0
 
     def detect_pieces(self):
         imgs = self.camera_img
@@ -28,9 +31,9 @@ class PuzzleSolver():
             tmp_h = min(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
             ws.append(tmp_w)
             hs.append(tmp_h)
-        w = average(ws)
-        h = average(hs)
-        self.original = cv2.resize(self.original, (int(h*3), int(w*4)), interpolation=cv2.INTER_CUBIC)
+        self.w = average(ws)
+        self.h = average(hs)
+        self.original = cv2.resize(self.original, (int(self.h*3), int(self.w*4)), interpolation=cv2.INTER_CUBIC)
         cv2.imwrite("./results/" + self.name + '/resize.png', self.original)
 
 
@@ -80,6 +83,18 @@ class PuzzleSolver():
             piece.orientation = phi_idx + piece.orientation
             piece.target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
             print(f'angle: {piece.orientation}\ttarget: {piece.target}')
+    def save_result(self, path):
+        info = dict()
+        for idx, p in enumerate(self.pieces):
+            info[idx] = {
+				"posx":  int(p.middle_point[0]), 
+				"posy":  int(p.middle_point[1]), 
+				"orientation": p.orientation, 
+				"targetx": int(p.target[0]*self.h+self.h/2), 
+                "targety": int(p.target[1]*self.w+self.w/2)
+			}
+        with open(path, 'w') as f:
+            json.dump(info, f)
 
 class Puzzle():
     def __init__(self, piece, mid, corner, inner):

@@ -258,7 +258,7 @@ if __name__ == '__main__':
         puzzle_solver = PuzzleSolver(ori, img, name)
         puzzle_solver.detect_pieces()
         puzzle_solver.solve()
-
+        puzzle_solver.save_result("./results/" + name + "/info.txt")
 
         '''
         #image processing, finding the centroid and principal angle

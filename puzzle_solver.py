@@ -6,6 +6,11 @@ import os
 from Puzzle import PuzzleSolver
 
 if __name__=="__main__":
+	parser = argparse.ArgumentParser()
+	parser.add_argument("--input_img", "-i", help="input image path", default = "./images/test/2_original.jpg")
+	parser.add_argument("--ori_img", "-o", help="original image path")
+	args = parser.parse_args()
+
 	img = cv2.imread(args.input_img)
 	ori = cv2.imread(args.ori_img)
 	name = args.input_img.split('/')[-1].split('.')[0]
@@ -16,3 +21,4 @@ if __name__=="__main__":
 	puzzle_solver = PuzzleSolver(ori, img, name)
 	puzzle_solver.detect_pieces()
 	puzzle_solver.solve()
+	puzzle_solver.save_result("./results/" + name + "/info.txt")
