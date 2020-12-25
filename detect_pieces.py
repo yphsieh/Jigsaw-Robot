@@ -31,7 +31,8 @@ def closing(img, kernel_size, itr):
     img = cv2.erode(img, kernel, iterations=itr)
     return img
 
-def image_preprocess(img):
+def image_preprocess(img_path):
+    img = cv2.imread(img_path)
     w, h = img[:, :, 0].shape
     img = img[int(0.2*w): int(0.95*w), int(0.085*h): int(0.9*h)]
     return img
@@ -191,6 +192,29 @@ def detect_corners(img, numCorners=4):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     corners = cv2.goodFeaturesToTrack(gray, numCorners,0.1,40)
     corners = np.int0(corners)
+    for i in corners:
+        x,y = i.ravel()
+        cv2.circle(img,(x,y),3,(0, 255, 255),2)
+    cv2.imwrite('images/tmp/corners' + str(len(corners)) +'.jpg',img)
+    return corners
+
+def removeShadow(img):
+    rgb_planes = cv2.split(img)
+
+    result_norm_planes = []
+    for plane in rgb_planes:
+        norm_img = cv2.normalize(plane, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        norm_img = cv2.equalizeHist(norm_img)
+        result_norm_planes.append(norm_img)
+
+    result_norm = cv2.merge(result_norm_planes)
+    return result_norm
+
+def detect_corners(img, numCorners=4):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    corners = cv2.goodFeaturesToTrack(gray, numCorners,0.1,40)
+    corners = np.int0(corners)
+    print(len(corners))
     for i in corners:
         x,y = i.ravel()
         cv2.circle(img,(x,y),3,(0, 255, 255),2)
