@@ -1,99 +1,94 @@
 import cv2
 import sys
 from matplotlib.pyplot import pie
+from numpy.lib.function_base import average
 import scipy
 import numpy as np
+import math
 
-from detect_pieces import detect_pieces, image_preprocess
+from detect_pieces import detect_pieces, image_preprocess, removeShadow, getRect
 from match_template import match_template
 # from utility import *
 
 class PuzzleSolver():
-	def __init__(self, ori, img, name="test"):
-		self.original_img = ori
-		self.camera_img = img
-		self.name = name
-		self.pieces = []
+    def __init__( self, ori, img, name="test"):
+        self.name = name
+        # self.camera_img = image_preprocess(img)
+        self.camera_img = img
+        self.original = removeShadow(ori)
+        self.pieces = []
 
-	def main(self):
-		# imgs = image_preprocess(self.camera_img)
-		imgs = self.camera_img
-		pieces, mid_points = detect_pieces(imgs, self.name)
-		for i in range(len(pieces)):
-			self.pieces.append(Puzzle(pieces[i], mid_points[i]))
+    def detect_pieces(self):
+        imgs = self.camera_img
+        pieces, mid_points, corners, crops = detect_pieces(imgs, self.name)
+        ws = []
+        hs = []
+        for i in range(len(pieces)):
+            self.pieces.append(Puzzle(pieces[i], mid_points[i], corners[i], crops[i]))
+            # print(self.pieces[i].inner.shape)
+            tmp_w = max(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
+            tmp_h = min(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
+            ws.append(tmp_w)
+            hs.append(tmp_h)
+        w = average(ws)
+        h = average(hs)
+        self.original = cv2.resize(self.original, (int(h*3), int(w*4)), interpolation=cv2.INTER_CUBIC)
+        cv2.imwrite("./results/" + self.name + '/resize.png', self.original)
 
-	def solve(self):
-		pass
-		# for i, p in enumerate(self.pieces):
-		# 	edges = p.detect_edges()
-		# 	print('saving image ./results/'+self.name+f'/edges_{i:02}.jpg')
-		# 	cv2.imwrite('./results/'+self.name+f'/edges_{i:02}.jpg', edges)
-		# for i in range(len(self.pieces)):
-		# 	rotated = scipy.ndimage.rotate(self.pieces[i].img, self.pieces[i].orientation)
-			# for 0/90/180/270:
-			# 	cv2.matchTemplate(self.original_img, rotated, method)
-			# 	if found: self.orientation = 0/90/180/270 + self.orientation
-		
+
+    def solve(self, methodId=3):
+        methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+        display = self.original.copy()
+
+        for idx, piece in enumerate(self.pieces):
+            gray = cv2.cvtColor(piece.inner, cv2.COLOR_BGR2GRAY)
+            # gray = getRect(gray, piece.corner)
+            ori_gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+
+            w, h = gray.shape[::-1]
+            score = -1
+            phi_idx = -1
+            topleft_idx = -1
+
+            rot = gray.copy()
+            for phi in [0, 90, 180, 270]:
+                rot = scipy.ndimage.rotate(gray, phi)
+
+                method = eval(methods[methodId])
+
+                # Apply template Matching
+                res = cv2.matchTemplate(ori_gray, rot, method)
+                min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+                # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+                if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+                    top_left = min_loc
+                else:
+                    top_left = max_loc
+
+                if max_val > score :
+                    score = max_val
+                    phi_idx = phi
+                    topleft_idx = top_left
+
+            top_left = topleft_idx
+            bottom_right = (top_left[0] + w, top_left[1] + h)
+            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 8)
+            mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
+            cv2.circle(display, mid, 3, 255, 2)
+            cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
+            print("\nsaving result at ./results/" + self.name + "/matched.jpg")
+            cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
+
+            piece.orientation = phi_idx + piece.orientation
+            piece.target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
+            print(f'angle: {piece.orientation}\ttarget: {piece.target}')
 
 class Puzzle():
-	def __init__(self, piece, m):
-		self.img = piece
-		self.middle_point = m
-		self.orientation = 0 	# self.cal_orientation() yet to be done
-		self.pos = [0,0]		# current position (from image) 
-		self.target = [0,0]		# target position (row, column)
-
-	def detect_corners2(self): 	# detect and return the corners as a list
-		gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-		gray = np.float32(gray)
-		dst = cv2.cornerHarris(gray,5,3,0.04)
-		ret, dst = cv2.threshold(dst,0.1*dst.max(),255,0)
-		dst = np.uint8(dst)
-		ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
-		criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
-		corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),(-1,-1),criteria)
-		# for i in range(1, len(corners)): print(corners[i])
-		display = self.img
-		display[dst>0.1*dst.max()]=[0,0,255]
-		cv2.imwrite('images/tmp/corners.jpg', display)
-		return corners
-
-	def detect_corners(self): 	# detect and return the corners as a list
-		gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
-		# gray = np.float32(gray)
-		# dst = cv2.cornerHarris(gray,2,3,0.04)
-		# ret, dst = cv2.threshold(dst,0.1*dst.max(),255,0)
-		# dst = np.uint8(dst)
-		# ret, labels, stats, centroids = cv2.connectedComponentsWithStats(dst)
-		# criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
-		# corners = cv2.cornerSubPix(gray,np.float32(centroids),(5,5),(-1,-1),criteria)
-		# for i in range(1, len(corners)): print(corners[i])
-		# display = self.img
-		# display[dst>0.1*dst.max()]=[0,0,255]
-		# cv2.imwrite('images/tmp/corners.jpg', display)
-
-		# blur_img = cv2.GaussianBlur(gray, (3,3), 0)
-		try:
-			edges = cv2.Canny(gray, 200, 250, apertureSize = 3)
-			lines = cv2.HoughLines(edges,1,np.pi/180,170)
-
-			for i in range(len(lines)):
-				rho, theta = lines[i][0][0],lines[i][0][1]
-				a = np.cos(theta)
-				b = np.sin(theta)
-				x0 = a*rho
-				y0 = b*rho
-				x1 = int(x0 + 1000*(-b))
-				y1 = int(y0 + 1000*(a))
-				x2 = int(x0 - 1000*(-b))
-				y2 = int(y0 - 1000*(a))
-				cv2.line(self.img,(x1,y1),(x2,y2),(0,0,255),2)
-				# if len(lines) >= 2: cv2.imwrite('images/tmp/hough.jpg', self.img)
-			print(len(lines), "lines")
-
-		except:
-			print("no line")
-		
-		# return corners
-
-	# def cal_orientation(self): # calculate and return the orientation
+    def __init__(self, piece, mid, corner, inner):
+        self.img = piece
+        self.middle_point = mid
+        self.orientation = 0
+        self.pos = [0,0]        # current position (from image) 
+        self.target = [0,0]        # target position (row, column)
+        self.corner = corner
+        self.inner = inner
