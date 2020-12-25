@@ -6,10 +6,7 @@ import scipy
 import numpy as np
 import math
 
-<<<<<<< HEAD
-from detect_pieces import detect_pieces, image_preprocess, removeShadow, getRect
-from match_template import match_template
-# from utility import *
+from detect_pieces import detect_pieces, image_preprocess, removeShadow
 
 class PuzzleSolver():
     def __init__( self, ori, img, name="test"):

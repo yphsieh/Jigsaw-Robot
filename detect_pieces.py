@@ -9,7 +9,7 @@ import os
 import sys
 from scipy import stats
 
-def getKernel(ks):
+def getKernel(ks):g
     r = math.floor(ks/2)
     kernel = np.zeros((ks, ks), np.uint8)
     kernel[r][r] = 1
@@ -35,16 +35,6 @@ def image_preprocess(img_path):
     img = cv2.imread(img_path)
     w, h = img[:, :, 0].shape
     img = img[int(0.2*w): int(0.95*w), int(0.085*h): int(0.9*h)]
-    return img
-
-def getRect(img, corner):
-    h, w = img.shape
-    w_crop, crop_w, h_crop, crop_h = 10, 10, 10, 10
-    while np.median(img[:,:h_crop]) == 0 and h_crop <= h*0.25: h_crop += 1
-    while np.median(img[-crop_w:,:]) == 0 and crop_w <= w*0.25: crop_w += 1
-    while np.median(img[:,-crop_h:]) == 0 and crop_h <= h*0.25: crop_h += 1
-    while np.median(img[:w_crop,:]) == 0 and w_crop <= w*0.25: w_crop += 1
-    img = img[w_crop:-crop_w,h_crop:-crop_h]
     return img
 
 def remove_bg(im, thres=[20, 60, 60]):

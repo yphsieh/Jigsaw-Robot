@@ -7,6 +7,7 @@ import cv2
 import argparse
 from time import sleep
 import serial
+import os
 
 from mycalibrate import calibrate
 from arduino_sucker import Arduino_Sucker
@@ -247,8 +248,17 @@ if __name__ == '__main__':
         # save the original image
         cv2.imwrite('tmp.jpg',frame)
 
-        puzzle_solver = PuzzleSolver(args.ori_img, 'tmp.jpg')
+        img = cv2.imread(args.input_img)
+        ori = cv2.imread('tmp.jpg')
+        name = 'tmp'
+        if not os.path.isdir("./results/" + name):
+            print("creating folder './results/" + name + "'")
+            os.mkdir("./results/" + name)
+        os.mkdir("./results/" + name + "/cropped")
+        puzzle_solver = PuzzleSolver(ori, img, name)
+        puzzle_solver.detect_pieces()
         puzzle_solver.solve()
+
 
         '''
         #image processing, finding the centroid and principal angle
