@@ -87,8 +87,8 @@ class PuzzleSolver():
         info = dict()
         for idx, p in enumerate(self.pieces):
             info[idx] = {
-				"posx":  int(p.middle_point[0]), 
-				"posy":  int(p.middle_point[1]), 
+				"posx":  int(p.pos[0]), 
+				"posy":  int(p.pos[1]), 
 				"orientation": p.orientation, 
 				"targetx": int(p.target[0]*self.h+self.h/2), 
                 "targety": int(p.target[1]*self.w+self.w/2)
@@ -99,9 +99,8 @@ class PuzzleSolver():
 class Puzzle():
     def __init__(self, piece, mid, corner, inner):
         self.img = piece
-        self.middle_point = mid
         self.orientation = 0
-        self.pos = [0,0]        # current position (from image) 
+        self.pos = mid        # current position (from image) 
         self.target = [0,0]        # target position (row, column)
         self.corner = corner
         self.inner = inner
