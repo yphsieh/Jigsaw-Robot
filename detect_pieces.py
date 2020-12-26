@@ -62,7 +62,7 @@ def remove_bg(im, thres=[5, 80, 70]):
     cv2.imwrite('images/test/backgroundRemoved.jpg', remove_bg)
     return masked_img, res_img #, remove_bg
 
-def detect_pieces(im, name, thres=[5, 80, 70]):
+def detect_pieces(im, name, thres=[5, 95, 70]):
     masked_img, res_img = remove_bg(im, thres)
     cv2.imwrite("./results/" + name + '/res.jpg', res_img)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

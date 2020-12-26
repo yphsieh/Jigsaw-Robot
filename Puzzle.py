@@ -73,7 +73,7 @@ class PuzzleSolver():
 
             top_left = topleft_idx
             bottom_right = (top_left[0] + w, top_left[1] + h)
-            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 8)
+            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 3)
             mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
             cv2.circle(display, mid, 3, 255, 2)
             # cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
