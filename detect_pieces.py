@@ -31,13 +31,12 @@ def closing(img, kernel_size, itr):
     img = cv2.erode(img, kernel, iterations=itr)
     return img
 
-def image_preprocess(img_path):
-    img = cv2.imread(img_path)
+def image_preprocess(img):
     w, h = img[:, :, 0].shape
     img = img[int(0.2*w): int(0.95*w), int(0.085*h): int(0.9*h)]
     return img
 
-def remove_bg(im, thres=[20, 60, 60]):
+def remove_bg(im, thres=[5, 60, 60]):
     im_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
     med_h = stats.mode(im_hsv[:, :, 0], axis=None)[0][0]
@@ -64,7 +63,7 @@ def remove_bg(im, thres=[20, 60, 60]):
     cv2.imwrite('images/test/backgroundRemoved.jpg', remove_bg)
     return masked_img, res_img #, remove_bg
 
-def detect_pieces(im, name, thres=[10, 70, 50]):
+def detect_pieces(im, name, thres=[5, 60, 60]):
     masked_img, res_img = remove_bg(im, thres)
     cv2.imwrite("./results/" + name + '/res.jpg', res_img)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)

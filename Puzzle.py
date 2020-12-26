@@ -12,8 +12,8 @@ from detect_pieces import detect_pieces, image_preprocess, removeShadow
 class PuzzleSolver():
     def __init__( self, ori, img, name="test"):
         self.name = name
-        # self.camera_img = image_preprocess(img)
-        self.camera_img = img
+        self.camera_img = image_preprocess(img)
+        # self.camera_img = img
         self.original = removeShadow(ori)
         self.pieces = []
         self.w = 0
@@ -83,6 +83,7 @@ class PuzzleSolver():
             piece.orientation = phi_idx + piece.orientation
             piece.target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
             print(f'angle: {piece.orientation}\ttarget: {piece.target}')
+            
     def save_result(self, path):
         info = dict()
         for idx, p in enumerate(self.pieces):
