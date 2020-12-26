@@ -323,8 +323,7 @@ if __name__ == '__main__':
 
         print("\nPuzzle result list: ", puzzle_result)
         print("\nPuzzle: [centroid_points (pixels), orientation_angle (degrees), row, col]")
-        for puzzle in puzzle_result:
-            print("Puzzle: ", puzzle)
+        for puzzle in puzzle_result: print("Puzzle: ", puzzle)
 
         ########################################## Robot moving ################################################
         for index, puzzle in enumerate(puzzle_result):
