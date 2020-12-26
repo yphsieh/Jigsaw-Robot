@@ -19,7 +19,6 @@ def getKernel(ks):
                 kernel[i][j] = 1
 
 def opening(img, kernel_size, itr):
-    # kernel = np.ones((kernel_size,kernel_size), np.uint8)
     kernel = getKernel(kernel_size)
     img = cv2.erode(img, kernel, iterations=itr)
     img = cv2.dilate(img, kernel, iterations=itr)
@@ -36,7 +35,7 @@ def image_preprocess(img):
     img = img[int(0.2*w): int(0.95*w), int(0.085*h): int(0.9*h)]
     return img
 
-def remove_bg(im, thres=[5, 60, 60]):
+def remove_bg(im, thres=[5, 80, 70]):
     im_hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
 
     med_h = stats.mode(im_hsv[:, :, 0], axis=None)[0][0]
@@ -63,7 +62,7 @@ def remove_bg(im, thres=[5, 60, 60]):
     cv2.imwrite('images/test/backgroundRemoved.jpg', remove_bg)
     return masked_img, res_img #, remove_bg
 
-def detect_pieces(im, name, thres=[5, 60, 60]):
+def detect_pieces(im, name, thres=[5, 80, 70]):
     masked_img, res_img = remove_bg(im, thres)
     cv2.imwrite("./results/" + name + '/res.jpg', res_img)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -74,6 +73,7 @@ def detect_pieces(im, name, thres=[5, 60, 60]):
     mid_points = []
     corners = []
     crops = []
+    angles = []
     i = 0
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -85,17 +85,18 @@ def detect_pieces(im, name, thres=[5, 60, 60]):
             candidate_box.append(box)
             cropped = removeShadow(crop(im, rect, box))
             crop_pieces.append(cropped)
-            mid, corner, inner = detect_middle(cnt.squeeze(), rect, im, name, i)
+            mid, corner, inner, angle = detect_middle(cnt.squeeze(), rect, im, name, i)
             mid_points.append(mid)
             corners.append(corner)
             crops.append(inner)
+            angles.append(angle)
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
             cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
             cv2.imwrite("./results/" + name + f"/cropped/crop_{i:02d}.jpg", cropped)
             cv2.imwrite("./results/" + name + f"/cropped/crop_inner{i:02d}.jpg", inner)
             i+=1
     cv2.imwrite("./results/" + name + "/display.jpg", display)
-    return crop_pieces, mid_points, corners, crops
+    return crop_pieces, mid_points, corners, crops, angles
 
 def detect_middle(cnt, box, img, name, i, vis=False):
     assert(cnt.shape[1]==2)
@@ -173,9 +174,10 @@ def detect_middle(cnt, box, img, name, i, vis=False):
     cropped = removeShadow(crop(img, rect_crop, box_crop))
     
     corner = [up_left, up_right, down_left, down_right]
+    angle = math.atan(abs(down_left[0]-down_right[0]) / abs(down_left[1]-down_right[1])) *180/math.pi
     mid_point = (up_left+up_right+down_left+down_right)//4
     
-    return mid_point, corner, cropped
+    return mid_point, corner, cropped, angle
 
 def detect_corners(img, numCorners=4):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

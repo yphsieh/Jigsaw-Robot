@@ -21,11 +21,11 @@ class PuzzleSolver():
 
     def detect_pieces(self):
         imgs = self.camera_img
-        pieces, mid_points, corners, crops = detect_pieces(imgs, self.name)
+        pieces, mid_points, corners, crops, angles = detect_pieces(imgs, self.name)
         ws = []
         hs = []
         for i in range(len(pieces)):
-            self.pieces.append(Puzzle(pieces[i], mid_points[i], corners[i], crops[i]))
+            self.pieces.append(Puzzle(pieces[i], mid_points[i], corners[i], crops[i], angles[i]))
             # print(self.pieces[i].inner.shape)
             tmp_w = max(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
             tmp_h = min(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
@@ -76,14 +76,14 @@ class PuzzleSolver():
             cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 8)
             mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
             cv2.circle(display, mid, 3, 255, 2)
-            cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
+            # cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
             print("\nsaving result at ./results/" + self.name + "/matched.jpg")
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
 
             piece.orientation = phi_idx + piece.orientation
             piece.target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
             print(f'angle: {piece.orientation}\ttarget: {piece.target}')
-            
+
     def save_result(self, path):
         info = dict()
         for idx, p in enumerate(self.pieces):
@@ -98,9 +98,9 @@ class PuzzleSolver():
             json.dump(info, f)
 
 class Puzzle():
-    def __init__(self, piece, mid, corner, inner):
+    def __init__(self, piece, mid, corner, inner, angle):
         self.img = piece
-        self.orientation = 0
+        self.orientation = angle
         self.pos = mid        # current position (from image) 
         self.target = [0,0]        # target position (row, column)
         self.corner = corner
