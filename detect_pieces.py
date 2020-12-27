@@ -243,4 +243,3 @@ def crop(img, rect, box):
 if __name__=='__main__':
     img = image_preprocess(sys.argv[1])
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    
