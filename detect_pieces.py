@@ -85,13 +85,15 @@ def detect_pieces(im, name, thres=[5, 95, 70]):
             candidate_box.append(box)
             cropped = removeShadow(crop(im, rect, box))
             crop_pieces.append(cropped)
-            mid, corner, inner, angle = detect_middle(cnt.squeeze(), rect, im, name, i)
+            mid, corner, inner, angle, l, r = detect_middle(cnt.squeeze(), rect, im, name, i)
             mid_points.append(mid)
             corners.append(corner)
             crops.append(inner)
             angles.append(angle)
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
             cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
+            cv2.circle(display, (int(l[0]),int(l[1])), radius=5, color=(255, 0, 0), thickness=3)
+            cv2.circle(display, (int(r[0]),int(r[1])), radius=5, color=(0, 0, 255), thickness=3)
             cv2.imwrite("./results/" + name + f"/cropped/crop_{i:02d}.jpg", cropped)
             cv2.imwrite("./results/" + name + f"/cropped/crop_inner{i:02d}.jpg", inner)
             i+=1
@@ -174,10 +176,12 @@ def detect_middle(cnt, box, img, name, i, vis=False):
     cropped = removeShadow(crop(img, rect_crop, box_crop))
     
     corner = [up_left, up_right, down_left, down_right]
-    angle = math.atan(abs(down_left[0]-down_right[0]) / abs(down_left[1]-down_right[1])) *180/math.pi
     mid_point = (up_left+up_right+down_left+down_right)//4
+
+    angle = math.atan(abs(down_left[0]-down_right[0]) / abs(down_left[1]-down_right[1])) *180/math.pi
+    print(down_left, down_right, angle)
     
-    return mid_point, corner, cropped, angle
+    return mid_point, corner, cropped, angle, down_left, down_right
 
 def detect_corners(img, numCorners=4):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -243,3 +247,4 @@ def crop(img, rect, box):
 if __name__=='__main__':
     img = image_preprocess(sys.argv[1])
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    
