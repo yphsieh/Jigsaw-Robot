@@ -42,6 +42,7 @@ class PuzzleSolver():
         display = self.original.copy()
 
         for idx, piece in enumerate(self.pieces):
+            # if idx != 3: continue
             gray = cv2.cvtColor(piece.inner, cv2.COLOR_BGR2GRAY)
             # gray = getRect(gray, piece.corner)
             ori_gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
@@ -73,9 +74,9 @@ class PuzzleSolver():
 
             top_left = topleft_idx
             bottom_right = (top_left[0] + w, top_left[1] + h)
-            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 3)
+            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 2)
             mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
-            cv2.circle(display, mid, 3, 255, 2)
+            cv2.circle(display, mid, 1, 255, 1)
             # cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
             print("\nsaving result at ./results/" + self.name + "/matched.jpg")
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)

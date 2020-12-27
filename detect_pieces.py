@@ -32,7 +32,7 @@ def closing(img, kernel_size, itr):
 
 def image_preprocess(img):
     w, h = img[:, :, 0].shape
-    img = img[int(0.2*w): int(0.95*w), int(0.085*h): int(0.9*h)]
+    img = img[int(0.15*w): int(0.9*w), int(0.085*h): int(0.9*h)]
     return img
 
 def remove_bg(im, thres=[5, 80, 70]):
@@ -62,11 +62,11 @@ def remove_bg(im, thres=[5, 80, 70]):
     cv2.imwrite('images/test/backgroundRemoved.jpg', remove_bg)
     return masked_img, res_img #, remove_bg
 
-def detect_pieces(im, name, thres=[5, 95, 70]):
+def detect_pieces(im, name, thres=[5, 125, 120]):
     masked_img, res_img = remove_bg(im, thres)
     cv2.imwrite("./results/" + name + '/res.jpg', res_img)
     contours, _ = cv2.findContours(masked_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    display = im
+    display = im.copy()
     total_area = masked_img.shape[0] * masked_img.shape[1]
     candidate_box = []
     crop_pieces = []
@@ -198,31 +198,9 @@ def removeShadow(img):
 
     result_norm_planes = []
     for plane in rgb_planes:
-        norm_img = cv2.normalize(plane, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-        norm_img = cv2.equalizeHist(norm_img)
-        result_norm_planes.append(norm_img)
-
-    result_norm = cv2.merge(result_norm_planes)
-    return result_norm
-
-def detect_corners(img, numCorners=4):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    corners = cv2.goodFeaturesToTrack(gray, numCorners,0.1,40)
-    corners = np.int0(corners)
-    print(len(corners))
-    for i in corners:
-        x,y = i.ravel()
-        cv2.circle(img,(x,y),3,(0, 255, 255),2)
-    cv2.imwrite('images/tmp/corners' + str(len(corners)) +'.jpg',img)
-    return corners
-
-def removeShadow(img):
-    rgb_planes = cv2.split(img)
-
-    result_norm_planes = []
-    for plane in rgb_planes:
-        norm_img = cv2.normalize(plane, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-        norm_img = cv2.equalizeHist(norm_img)
+        norm_img = plane.copy()
+        # norm_img = cv2.normalize(plane, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+        # norm_img = cv2.equalizeHist(norm_img)
         result_norm_planes.append(norm_img)
 
     result_norm = cv2.merge(result_norm_planes)
