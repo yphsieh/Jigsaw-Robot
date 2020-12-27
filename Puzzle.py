@@ -78,29 +78,20 @@ class PuzzleSolver():
             cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 2)
             mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
             cv2.circle(display, mid, 1, 255, 1)
-            # cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 4, (0, 255, 255), 10, cv2.LINE_AA)
-            print("\nsaving result at ./results/" + self.name + "/matched.jpg")
+            cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_AA)
+            # print("\nsaving result at ./results/" + self.name + "/matched.jpg")
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
 
             piece.orientation = phi_idx + piece.orientation
-            # for m in range(len(middles)):
-            #     if math.floor((middles[m][1])/self.original.shape[0] * 4) == math.floor((top_left[1] + w/2)/self.original.shape[0] * 4) and \
-            #        math.floor((middles[m][0])/self.original.shape[1] * 3) == math.floor((top_left[0] + h/2)/self.original.shape[1] * 3):
-            #         if middles[m][1] > top_left[1] + w/2:
-            #             middles[m][1] += 
-            #         else:
+            middles[idx] = [top_left[1] + h/2, top_left[0] + w/2]
 
-            #         if middles[m]:
-
-            # middles[idx] = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
-
-            middles[idx] = [top_left[1] + w/2, top_left[0] + h/2]
-
-        np.argsort(middles, axis=1, kind='quicksort', order=None)
-        for 
+        order = np.argsort(middles, axis=0)
+        print(order)
+        for idx, piece in enumerate(self.pieces):
+            piece.target = [math.floor((order[idx][0])/3), math.floor((order[idx][1])/4)]
             print(f'angle: {piece.orientation}\ttarget: {piece.target}')
-            
-
+           
+        
     def save_result(self, path):
         info = dict()
         for idx, p in enumerate(self.pieces):
