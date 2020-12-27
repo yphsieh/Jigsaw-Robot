@@ -83,14 +83,19 @@ class PuzzleSolver():
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
 
             piece.orientation = phi_idx + piece.orientation
-            middles[idx] = [top_left[1] + h/2, top_left[0] + w/2]
+            middles[idx] = [int(top_left[1] + h/2), int(top_left[0] + w/2)]
 
         order = np.argsort(middles, axis=0)
-        print(order)
-        for idx, piece in enumerate(self.pieces):
-            piece.target = [math.floor((order[idx][0])/3), math.floor((order[idx][1])/4)]
-            print(f'angle: {piece.orientation}\ttarget: {piece.target}')
-           
+        new = []
+        for i in range(len(self.pieces)): new.append([0,0])
+
+        for i in range(len(order)):
+            new[order[i][0]][0] = i
+            new[order[i][1]][1] = i
+
+        for idx, piece in enumerate(self.pieces):  
+            piece.target = [math.floor((new[idx][0])/3), math.floor((new[idx][1])/4)]
+            print(f'angle: {piece.orientation:4.3f}\ttarget: {piece.target}')
         
     def save_result(self, path):
         info = dict()
