@@ -36,7 +36,6 @@ class PuzzleSolver():
         self.original = cv2.resize(self.original, (int(self.h*3), int(self.w*4)), interpolation=cv2.INTER_CUBIC)
         cv2.imwrite("./results/" + self.name + '/resize.png', self.original)
 
-
     def solve(self, methodId=3):
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
         display = self.original.copy()
@@ -105,3 +104,4 @@ class Puzzle():
         self.target = [0,0]        # target position (row, column)
         self.corner = corner
         self.inner = inner
+
