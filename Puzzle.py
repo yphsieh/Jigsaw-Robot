@@ -39,6 +39,8 @@ class PuzzleSolver():
     def solve(self, methodId=3):
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
         display = self.original.copy()
+        middles = []
+        for i in range(len(self.pieces)): middles.append(1)
 
         for idx, piece in enumerate(self.pieces):
             # if idx != 3: continue
@@ -81,8 +83,23 @@ class PuzzleSolver():
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
 
             piece.orientation = phi_idx + piece.orientation
-            piece.target = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
+            # for m in range(len(middles)):
+            #     if math.floor((middles[m][1])/self.original.shape[0] * 4) == math.floor((top_left[1] + w/2)/self.original.shape[0] * 4) and \
+            #        math.floor((middles[m][0])/self.original.shape[1] * 3) == math.floor((top_left[0] + h/2)/self.original.shape[1] * 3):
+            #         if middles[m][1] > top_left[1] + w/2:
+            #             middles[m][1] += 
+            #         else:
+
+            #         if middles[m]:
+
+            # middles[idx] = [math.floor((top_left[1] + w/2)/self.original.shape[0] * 4), math.floor((top_left[0] + h/2)/self.original.shape[1] * 3)]
+
+            middles[idx] = [top_left[1] + w/2, top_left[0] + h/2]
+
+        np.argsort(middles, axis=1, kind='quicksort', order=None)
+        for 
             print(f'angle: {piece.orientation}\ttarget: {piece.target}')
+            
 
     def save_result(self, path):
         info = dict()
