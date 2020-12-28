@@ -1,0 +1,45 @@
+name: puzzle_solver
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2020.10.14=0
+  - certifi=2020.11.8=py38hecd8cb5_0
+  - libcxx=10.0.0=1
+  - libedit=3.1.20191231=h1de35cc_1
+  - libffi=3.3=hb1e8313_2
+  - ncurses=6.2=h0a44026_1
+  - openssl=1.1.1h=haf1e3a3_0
+  - pip=20.2.4=py38hecd8cb5_0
+  - python=3.8.5=h26836e1_1
+  - readline=8.0=h1de35cc_0
+  - setuptools=50.3.1=py38hecd8cb5_1
+  - sqlite=3.33.0=hffcf06c_0
+  - tk=8.6.10=hb0a8c7a_0
+  - wheel=0.35.1=pyhd3eb1b0_0
+  - xz=5.2.5=h1de35cc_0
+  - zlib=1.2.11=h1de35cc_3
+  - pip:
+    - cycler==0.10.0
+    - decorator==4.4.2
+    - imageio==2.9.0
+    - joblib==1.0.0
+    - kiwisolver==1.3.1
+    - matplotlib==3.3.3
+    - networkx==2.5
+    - numpy==1.19.4
+    - opencv-python==4.4.0.46
+    - pillow==8.0.1
+    - pyparsing==2.4.7
+    - pyqt5==5.15.2
+    - pyqt5-sip==12.8.1
+    - python-dateutil==2.8.1
+    - pywavelets==1.1.1
+    - scikit-image==0.18.0
+    - scikit-learn==0.23.2
+    - scipy==1.5.4
+    - six==1.15.0
+    - sklearn==0.0
+    - threadpoolctl==2.1.0
+    - tifffile==2020.12.8
+prefix: /Users/lily/anaconda3/envs/puzzle_solver
+
