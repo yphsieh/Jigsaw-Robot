@@ -248,13 +248,13 @@ if __name__ == '__main__':
         # save the original image
         cv2.imwrite('tmp.jpg',frame)
 
-        img = cv2.imread(args.input_img)
-        ori = cv2.imread('tmp.jpg')
+        ori = cv2.imread(args.input_img)
+        img = cv2.imread('tmp.jpg')
         name = 'tmp'
         if not os.path.isdir("./results/" + name):
             print("creating folder './results/" + name + "'")
             os.mkdir("./results/" + name)
-        os.mkdir("./results/" + name + "/cropped")
+            os.mkdir("./results/" + name + "/cropped")
         puzzle_solver = PuzzleSolver(ori, img, name)
         puzzle_solver.detect_pieces()
         puzzle_solver.solve()
