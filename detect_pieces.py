@@ -91,9 +91,11 @@ def detect_pieces(im, name, thres=[5, 125, 120]):
             crops.append(inner)
             angles.append(angle)
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
-            cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
-            cv2.circle(display, (int(l[0]),int(l[1])), radius=5, color=(255, 0, 0), thickness=3)
-            cv2.circle(display, (int(r[0]),int(r[1])), radius=5, color=(0, 0, 255), thickness=3)
+            # cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
+            cv2.circle(display, (int(l[0]),int(l[1])), radius=5, color=(255, 0, 0), thickness=2)
+            cv2.circle(display, (int(r[0]),int(r[1])), radius=5, color=(0, 0, 255), thickness=2)
+            cv2.putText(display, f"{i}", (int(mid[0]),int(mid[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1, cv2.LINE_AA)
+            cv2.putText(display, f"{angle:4.2f}", (int(mid[0]) + 10,int(mid[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1, cv2.LINE_AA)
             cv2.imwrite("./results/" + name + f"/cropped/crop_{i:02d}.jpg", cropped)
             cv2.imwrite("./results/" + name + f"/cropped/crop_inner{i:02d}.jpg", inner)
             i+=1
@@ -178,7 +180,7 @@ def detect_middle(cnt, box, img, name, i, vis=False):
     corner = [up_left, up_right, down_left, down_right]
     mid_point = (up_left+up_right+down_left+down_right)//4
 
-    angle = math.atan(abs(down_left[0]-down_right[0]) / abs(down_left[1]-down_right[1])) *180/math.pi
+    angle = - 90 + (math.atan((down_left[1]-down_right[1]) / (down_left[0]-down_right[0])) *180/math.pi)
     print(down_left, down_right, angle)
     
     return mid_point, corner, cropped, angle, down_left, down_right
