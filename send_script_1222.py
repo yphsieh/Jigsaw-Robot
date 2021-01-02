@@ -316,7 +316,7 @@ if __name__ == '__main__':
         for puzzle in enumerate(puzzle_solver.pieces):
             xc = puzzle.pos[0]
             yc = puzzle.pos[1]
-            phi = puzzle.orientation
+            phi = puzzle.orientation # counter-clockwise degree
             i = puzzle.target[0]
             j = puzzle.target[1]
             puzzle_result.append([xc, yc, phi, i, j])
