@@ -9,6 +9,8 @@ import json
 
 from detect_pieces import detect_pieces, image_preprocess, removeShadow
 
+tor = 30
+
 class PuzzleSolver():
     def __init__( self, ori, img, name="test"):
         self.name = name
@@ -18,6 +20,7 @@ class PuzzleSolver():
         self.pieces = []
         self.w = 0
         self.h = 0
+        self.match = np.zeros([4, 3])
 
     def detect_pieces(self):
         imgs = self.camera_img
@@ -41,6 +44,7 @@ class PuzzleSolver():
         display = self.original.copy()
         middles = []
         for i in range(len(self.pieces)): middles.append(1)
+        unmatch_list = []
 
         for idx, piece in enumerate(self.pieces):
             # if idx != 3: continue
@@ -56,12 +60,19 @@ class PuzzleSolver():
 
             w = gray.shape[0]
             h = gray.shape[1]
+            ref_w = ori_gray.shape[0]//4
+            ref_h = ori_gray.shape[1]//3
             score = -1
             phi_idx = -1
             topleft_idx = -1
+            match = False
 
             rot = gray.copy()
-            for phi in [0, 90, 180, 270]:
+            if abs(gray.shape[0]-gray.shape[1]) > 3:
+                phi_candidates = [0, 180] if gray.shape[0]>gray.shape[1] else [90, 270]
+            else:
+                phi_candidates = [0, 90, 180, 270]
+            for phi in phi_candidates:
                 rot = scipy.ndimage.rotate(gray, phi)
 
                 method = eval(methods[methodId])
@@ -74,26 +85,35 @@ class PuzzleSolver():
                     top_left = min_loc
                 else:
                     top_left = max_loc
+                
+                if max_val > score:
+                    if (top_left[0]%ref_h<tor or (ref_h - top_left[0]%ref_h)<tor) and (top_left[1]%ref_w<tor or (ref_w-top_left[1]%ref_w)<tor):
+                        score = max_val
+                        phi_idx = phi
+                        topleft_idx = top_left
+                        match = True
+            if match:
+                if phi_idx==90 or phi_idx==270:
+                    tmp = w
+                    w = h
+                    h = tmp
+                piece.rotEdge(phi_idx)
+                top_left = topleft_idx
+                bottom_right = (top_left[0] + h, top_left[1] + w)
+                cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 2)
+                mid = (int(top_left[0] + h/2), int(top_left[1] + w/2))
+                cv2.circle(display, mid, 1, 255, 1)
+                cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_AA)
+                # print("\nsaving result at ./results/" + self.name + "/matched.jpg")
 
-                if max_val > score :
-                    score = max_val
-                    phi_idx = phi
-                    topleft_idx = top_left
+                # piece.orientation = phi_idx + piece.orientation
+                piece.orientation = -phi_idx + piece.orientation
+                middles[idx] = [int(top_left[1] + w/2), int(top_left[0] + h/2)]
+            else:
+                middles[idx] = [0, 0] 
+                unmatch_list.append(idx)
 
-            piece.rotEdge(phi_idx)
-            top_left = topleft_idx
-            bottom_right = (top_left[0] + w, top_left[1] + h)
-            cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 2)
-            mid = (int(top_left[0] + w/2), int(top_left[1] + h/2))
-            cv2.circle(display, mid, 1, 255, 1)
-            cv2.putText(display, f"{idx}", mid, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2, cv2.LINE_AA)
-            # print("\nsaving result at ./results/" + self.name + "/matched.jpg")
-            cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
-
-            # piece.orientation = phi_idx + piece.orientation
-            piece.orientation = -phi_idx + piece.orientation
-            middles[idx] = [int(top_left[1] + h/2), int(top_left[0] + w/2)]
-
+        cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
         order = np.argsort(middles, axis=0)
         new = []
         for i in range(len(self.pieces)): new.append([0,0])
