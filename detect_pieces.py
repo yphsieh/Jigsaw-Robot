@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+–import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import random as rd
@@ -74,6 +74,7 @@ def detect_pieces(im, name, thres=[5, 125, 120]):
     corners = []
     crops = []
     angles = []
+    edge_types = []
     i = 0
     for cnt in contours:
         area = cv2.contourArea(cnt)
@@ -85,11 +86,12 @@ def detect_pieces(im, name, thres=[5, 125, 120]):
             candidate_box.append(box)
             cropped = removeShadow(crop(im, rect, box))
             crop_pieces.append(cropped)
-            mid, corner, inner, angle, l, r = detect_middle(cnt.squeeze(), rect, im, name, i)
+            mid, corner, inner, angle, l, r, e = detect_middle(cnt.squeeze(), rect, im, name, i)
             mid_points.append(mid)
             corners.append(corner)
             crops.append(inner)
             angles.append(angle)
+            edge_types.append(e)
             cv2.drawContours(display, [box], -1, (0, 255, 0), 3)
             # cv2.circle(display, (int(mid[0]),int(mid[1])), radius=5, color=(255, 0, 0), thickness=10)
             cv2.circle(display, (int(l[0]),int(l[1])), radius=5, color=(255, 0, 0), thickness=2)
@@ -100,12 +102,14 @@ def detect_pieces(im, name, thres=[5, 125, 120]):
             cv2.imwrite("./results/" + name + f"/cropped/crop_inner{i:02d}.jpg", inner)
             i+=1
     cv2.imwrite("./results/" + name + "/display.jpg", display)
-    return crop_pieces, mid_points, corners, crops, angles
+    return crop_pieces, mid_points, corners, crops, angles, edge_types
 
-def detect_middle(cnt, box, img, name, i, vis=False):
+def detect_middle(cnt, box, img, name, i, vis=True):
     assert(cnt.shape[1]==2)
+    edge_types = [0, 0, 0, 0] # [up, right, down, right]: [outer: 1, inner: -1, flat: 0]
     mid = box[0]
     size = box[1]
+    print("angle: ", box[2])
     theta = (box[2])*math.pi/180
     
     num = cnt.shape[0]
@@ -139,34 +143,105 @@ def detect_middle(cnt, box, img, name, i, vis=False):
         thres += [20, 20]
         count += 1
     
-    if vis:
-        for p in up:
-            p = r.dot(p)
-            px = int(p[0] + mid[0])
-            py = int(p[1] + mid[1])
-            cv2.circle(img, (px, py), radius=5, color=(255, 0, 0), thickness=10)
-        for p in down:
-            p = r.dot(p)
-            px = int(p[0] + mid[0])
-            py = int(p[1] + mid[1])
-            cv2.circle(img, (px, py), radius=5, color=(125, 125, 0), thickness=10)
-        for p in left:
-            p = r.dot(p)
-            px = int(p[0] + mid[0])
-            py = int(p[1] + mid[1])
-            cv2.circle(img, (px, py), radius=5, color=(125, 0, 125), thickness=10)
-        for p in right:
-            p = r.dot(p)
-            px = int(p[0] + mid[0])
-            py = int(p[1] + mid[1])
-            cv2.circle(img, (px, py), radius=5, color=(0, 125, 125), thickness=10)
-        cv2.imwrite("./results/" + name + f"/test_mid.jpg", img)
+    # if vis:
+    #     for p in up:
+    #         p = r.dot(p)
+    #         px = int(p[0] + mid[0])
+    #         py = int(p[1] + mid[1])
+    #         cv2.circle(img, (px, py), radius=1, color=(255, 0, 0), thickness=1)
+    #     for p in down:
+    #         p = r.dot(p)
+    #         px = int(p[0] + mid[0])
+    #         py = int(p[1] + mid[1])
+    #         cv2.circle(img, (px, py), radius=1, color=(125, 125, 0), thickness=1)
+    #     for p in left:
+    #         p = r.dot(p)
+    #         px = int(p[0] + mid[0])
+    #         py = int(p[1] + mid[1])
+    #         cv2.circle(img, (px, py), radius=1, color=(125, 0, 125), thickness=1)
+    #     for p in right:
+    #         p = r.dot(p)
+    #         px = int(p[0] + mid[0])
+    #         py = int(p[1] + mid[1])
+    #         cv2.circle(img, (px, py), radius=1, color=(0, 125, 125), thickness=1)
+    #     cv2.imwrite("./results/" + name + f"/test_mid.jpg", img)
     
     up_left = sorted(up, key=lambda x: x[0]+x[1])[0]
     up_right = sorted(up, key=lambda x: x[0]-x[1])[0]
     down_left = sorted(down, key=lambda x: -x[0]+x[1])[0]
     down_right = sorted(down, key=lambda x: -x[0]-x[1])[0]
+
+    thres2=[size[0]/8, size[1]/8]
+    up_corner = []
+    down_corner = []
+    left_corner = []
+    right_corner = []
+    for p in up:
+        if abs(p[1]-(up_left[1]+up_right[1])/2) < thres2[1]:
+            up_corner.append(p)
+    for p in down:
+        if abs(p[1]-(down_left[1]+down_right[1])/2) < thres2[1]:
+            down_corner.append(p)
+    for p in left:
+        if abs(p[0]-(up_left[0]+down_left[0])/2) < thres2[0]:
+            left_corner.append(p)
+    for p in right:
+        if abs(p[0]-(up_right[0]+down_right[0])/2) < thres2[0]:
+            right_corner.append(p)
+
+    thres3=[size[0]/16, size[1]/16]
+    if up_corner:
+        if (np.min(up_corner, axis=0)[0] - up_left[0]) < -thres3[0]:
+            edge_types[0] = 1
+        elif (np.max(up_corner, axis=0)[0] - up_left[0]) > thres3[0]:
+            edge_types[0] = -1
+    if down_corner:
+        if (np.max(down_corner, axis=0)[0] - down_left[0]) > thres3[0]:
+            edge_types[2] = 1
+        elif (np.min(down_corner, axis=0)[0] - down_left[0]) < -thres3[0]:
+            edge_types[2] = -1
+    if left_corner:
+        if (np.min(left_corner, axis=0)[1] - up_left[1]) < -thres3[1]:
+            edge_types[1] = 1
+        elif (np.max(left_corner, axis=0)[1] - up_left[1]) > thres3[1]:
+            edge_types[1] = -1
+    if right_corner:
+        if (np.max(right_corner, axis=0)[1] - up_right[1]) > thres3[1]:
+            edge_types[3] = 1
+        elif (np.min(right_corner, axis=0)[1] - up_right[1]) < -thres3[1]:
+            edge_types[3] = -1
     
+    if vis:
+        if not edge_types[0]==0:
+            for p in up_corner:
+                p = r.dot(p)
+                px = int(p[0] + mid[0])
+                py = int(p[1] + mid[1])
+                color = (255, 0, 0) if edge_types[0]==1 else (125, 125, 0)
+                cv2.circle(img, (px, py), radius=1, color=color, thickness=1)
+        if not edge_types[2]==0:
+            for p in down_corner:
+                p = r.dot(p)
+                px = int(p[0] + mid[0])
+                py = int(p[1] + mid[1])
+                color = (255, 0, 0) if edge_types[2]==1 else (125, 125, 0)
+                cv2.circle(img, (px, py), radius=1, color=color, thickness=1)
+        if not edge_types[1]==0:
+            for p in left_corner:
+                p = r.dot(p)
+                px = int(p[0] + mid[0])
+                py = int(p[1] + mid[1])
+                color = (255, 0, 0) if edge_types[1]==1 else (125, 125, 0)
+                cv2.circle(img, (px, py), radius=1, color=color, thickness=1)
+        if not edge_types[3]==0:
+            for p in right_corner:
+                p = r.dot(p)
+                px = int(p[0] + mid[0])
+                py = int(p[1] + mid[1])
+                color = (255, 0, 0) if edge_types[3]==1 else (125, 125, 0)
+                cv2.circle(img, (px, py), radius=1, color=color, thickness=1)
+        cv2.imwrite("./results/" + name + f"/test_edge.jpg", img)
+
     up_left = r.dot(up_left) + mid
     up_right = r.dot(up_right) + mid
     down_left = r.dot(down_left) + mid
@@ -181,9 +256,9 @@ def detect_middle(cnt, box, img, name, i, vis=False):
     mid_point = (up_left+up_right+down_left+down_right)//4
 
     angle = - 90 + (math.atan((down_left[1]-down_right[1]) / (down_left[0]-down_right[0])) *180/math.pi)
-    print(down_left, down_right, angle)
+    # print(down_left, down_right, angle)
     
-    return mid_point, corner, cropped, angle, down_left, down_right
+    return mid_point, corner, cropped, angle, down_left, down_right, edge_types
 
 def detect_corners(img, numCorners=4):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

@@ -21,11 +21,11 @@ class PuzzleSolver():
 
     def detect_pieces(self):
         imgs = self.camera_img
-        pieces, mid_points, corners, crops, angles = detect_pieces(imgs, self.name)
+        pieces, mid_points, corners, crops, angles, edges = detect_pieces(imgs, self.name)
         ws = []
         hs = []
         for i in range(len(pieces)):
-            self.pieces.append(Puzzle(pieces[i], mid_points[i], corners[i], crops[i], angles[i]))
+            self.pieces.append(Puzzle(pieces[i], mid_points[i], corners[i], crops[i], angles[i], edges[i]))
             # print(self.pieces[i].inner.shape)
             tmp_w = max(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
             tmp_h = min(self.pieces[i].inner.shape[0], self.pieces[i].inner.shape[1])
@@ -73,6 +73,7 @@ class PuzzleSolver():
                     phi_idx = phi
                     topleft_idx = top_left
 
+            piece.rotEdge(phi_idx)
             top_left = topleft_idx
             bottom_right = (top_left[0] + w, top_left[1] + h)
             cv2.rectangle(display, top_left, bottom_right, (255, 0, 0), 2)
@@ -95,7 +96,7 @@ class PuzzleSolver():
 
         for idx, piece in enumerate(self.pieces):  
             piece.target = [math.floor((new[idx][0])/3), math.floor((new[idx][1])/4)]
-            print(f'angle: {piece.orientation:4.3f}\ttarget: {piece.target}')
+            print(f'angle: {piece.orientation:4.3f}\ttarget: {piece.target}\tedge: {piece.edge}')
         
     def save_result(self, path):
         info = dict()
@@ -111,11 +112,16 @@ class PuzzleSolver():
             json.dump(info, f)
 
 class Puzzle():
-    def __init__(self, piece, mid, corner, inner, angle):
+    def __init__(self, piece, mid, corner, inner, angle, edge):
         self.img = piece
         self.orientation = angle
         self.pos = mid        # current position (from image) 
         self.target = [0,0]        # target position (row, column)
         self.corner = corner
         self.inner = inner
+        self.edge = edge
+    
+    def rotEdge(self, phi_idx):
+        n = phi_idx//90
+        self.edge = self.edge[n:] + self.edge[:n]
 
