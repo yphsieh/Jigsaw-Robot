@@ -36,7 +36,7 @@ class PuzzleSolver():
         self.original = cv2.resize(self.original, (int(self.h*3), int(self.w*4)), interpolation=cv2.INTER_CUBIC)
         cv2.imwrite("./results/" + self.name + '/resize.png', self.original)
 
-    def solve(self, methodId=3):
+    def solve(self, methodId=1):
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR', 'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
         display = self.original.copy()
         middles = []
@@ -44,11 +44,18 @@ class PuzzleSolver():
 
         for idx, piece in enumerate(self.pieces):
             # if idx != 3: continue
-            gray = cv2.cvtColor(piece.inner, cv2.COLOR_BGR2GRAY)
-            # gray = getRect(gray, piece.corner)
-            ori_gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+            # gray = cv2.cvtColor(piece.inner, cv2.COLOR_BGR2GRAY)
+            # # gray = getRect(gray, piece.corner)
+            # ori_gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
 
-            w, h = gray.shape[::-1]
+            # gray = cv2.cvtColor(piece.inner, cv2.COLOR_BGR2HSV)
+            # gray = getRect(gray, piece.corner)
+            # ori_gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2HSV)
+            gray = piece.inner
+            ori_gray = self.original
+
+            w = gray.shape[0]
+            h = gray.shape[1]
             score = -1
             phi_idx = -1
             topleft_idx = -1
@@ -83,7 +90,8 @@ class PuzzleSolver():
             # print("\nsaving result at ./results/" + self.name + "/matched.jpg")
             cv2.imwrite("./results/" + self.name + '/matched.jpg', display)
 
-            piece.orientation = phi_idx + piece.orientation
+            # piece.orientation = phi_idx + piece.orientation
+            piece.orientation = -phi_idx + piece.orientation
             middles[idx] = [int(top_left[1] + h/2), int(top_left[0] + w/2)]
 
         order = np.argsort(middles, axis=0)
