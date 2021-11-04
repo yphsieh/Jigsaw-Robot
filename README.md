@@ -39,4 +39,3 @@ python testRemoveBG.py <image_path>
 ```
 - the results will be save in the folder ```./results/test/```
 
-## Reference
